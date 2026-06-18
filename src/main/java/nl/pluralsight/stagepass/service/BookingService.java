@@ -48,6 +48,9 @@ public class BookingService {
                         return new RuntimeException("Concert not found");
                     }
                 });
+        BigDecimal totalPrice = concert.getTicketPrice()
+                .multiply(BigDecimal.valueOf(booking.getNumberOfTickets()));
+        booking.setTotalPrice(totalPrice);
 
         int updatedAvailableSeats =
                 concert.getAvailableSeats() - booking.getNumberOfTickets();
