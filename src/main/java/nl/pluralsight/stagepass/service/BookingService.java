@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 @Service
 public class BookingService {
@@ -38,14 +39,23 @@ public class BookingService {
 
     @Transactional
     public Booking createBooking(Booking booking) {
-        Concert concert = concertRepository.findById(booking.getConcert().getId())
-                .orElseThrow(() -> new RuntimeException("Concert not found"));
 
-        // Compute total price
-        booking.setTotalPrice(BigDecimal.ZERO);
+        Concert concert = concertRepository
+                .findById(booking.getConcert().getId())
+                .orElseThrow(new Supplier<RuntimeException>() {
+                    @Override
+                    public RuntimeException get() {
+                        return new RuntimeException("Concert not found");
+                    }
+                });
 
-        // Set booking date and concert reference
-        booking.setBookingDate(LocalDate.now());
+        int updatedAvailableSeats =
+                concert.getAvailableSeats() - booking.getNumberOfTickets();
+
+        concert.setAvailableSeats(updatedAvailableSeats);
+
+        concertRepository.save(concert);
+
         booking.setConcert(concert);
 
         return bookingRepository.save(booking);
